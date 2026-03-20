@@ -15,22 +15,15 @@
   }
 
 function getSrc(item) {
-  console.log('--- getSrc ---');
-  console.log('shadowRoot:', item.shadowRoot);
-  console.log('children:', item.children.length);
-  
-  var allImgs = item.querySelectorAll('img');
-  console.log('querySelectorAll imgs:', allImgs.length);
-  allImgs.forEach(function(img) {
-    console.log('img src:', img.src, '| part:', img.getAttribute('part'));
-  });
-
-  if (item.shadowRoot) {
-    var shadowImgs = item.shadowRoot.querySelectorAll('img');
-    console.log('shadow imgs:', shadowImgs.length);
-    shadowImgs.forEach(function(img) {
-      console.log('shadow img src:', img.src);
-    });
+  if (item._cachedSrc) return item._cachedSrc;
+  if (!item.shadowRoot) return null;
+  var imgs = item.shadowRoot.querySelectorAll('img');
+  for (var i = 0; i < imgs.length; i++) {
+    var src = imgs[i].src;
+    if (src && src.indexOf('data:') === -1 && src.length > 10) {
+      item._cachedSrc = src;
+      return src;
+    }
   }
   return null;
 }
