@@ -1,18 +1,20 @@
 (function () {
   var floater, floaterImg;
 
-  function createFloater() {
-    if (document.getElementById('work-index-floater')) {
-      floater = document.getElementById('work-index-floater');
-      floaterImg = floater.querySelector('img');
-      return;
-    }
-    floater = document.createElement('div');
-    floater.id = 'work-index-floater';
-    floaterImg = document.createElement('img');
-    floater.appendChild(floaterImg);
-    document.body.appendChild(floater);
+function createFloater() {
+  if (document.getElementById('work-index-floater')) {
+    floater = document.getElementById('work-index-floater');
+    floaterImg = floater.querySelector('img');
+    return;
   }
+  floater = document.createElement('div');
+  floater.id = 'work-index-floater';
+  floater.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:380px;max-width:40vw;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.25s ease;';
+  floaterImg = document.createElement('img');
+  floaterImg.style.cssText = 'display:block;width:100%;height:auto;';
+  floater.appendChild(floaterImg);
+  document.body.appendChild(floater);
+}
 
 function getSrc(item) {
   if (item._cachedSrc) return item._cachedSrc;
@@ -32,18 +34,18 @@ function getSrc(item) {
     if (item._hoverBound) return;
     item._hoverBound = true;
 
-    item.addEventListener('mouseenter', function () {
-      var src = getSrc(item);
-      if (!src) return;
-      floaterImg.src = src;
-      floater.classList.add('visible');
-      item.classList.add('is-hovered');
-    });
+item.addEventListener('mouseenter', function () {
+  var src = getSrc(item);
+  if (!src) return;
+  floaterImg.src = src;
+  floater.style.opacity = '1';
+  item.classList.add('is-hovered');
+});
 
-    item.addEventListener('mouseleave', function () {
-      floater.classList.remove('visible');
-      item.classList.remove('is-hovered');
-    });
+item.addEventListener('mouseleave', function () {
+  floater.style.opacity = '0';
+  item.classList.remove('is-hovered');
+});
   }
 
   function initIndex() {
