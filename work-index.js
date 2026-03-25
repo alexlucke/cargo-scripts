@@ -9,7 +9,7 @@ function createFloater() {
   }
   floater = document.createElement('div');
   floater.id = 'work-index-floater';
-  floater.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:380px;max-width:40vw;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.25s ease;';
+  floater.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.25s ease;width:260px;max-width:25vw;';
   floaterImg = document.createElement('img');
   floaterImg.style.cssText = 'display:block;width:100%;height:auto;';
   floater.appendChild(floaterImg);
@@ -38,13 +38,17 @@ item.addEventListener('mouseenter', function () {
   var src = getSrc(item);
   if (!src) return;
   floaterImg.src = src;
+
+  var grid = document.querySelector('gallery-grid');
+  var rect = grid.getBoundingClientRect();
+  var centerX = rect.left + rect.width / 2;
+  var centerY = rect.top + rect.height / 2;
+
+  floater.style.left = centerX + 'px';
+  floater.style.top = centerY + 'px';
+  floater.style.transform = 'translate(-50%, -50%)';
   floater.style.opacity = '1';
   item.classList.add('is-hovered');
-});
-
-item.addEventListener('mouseleave', function () {
-  floater.style.opacity = '0';
-  item.classList.remove('is-hovered');
 });
   }
 
