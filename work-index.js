@@ -55,13 +55,24 @@
     });
   }
 
-  function initIndex() {
-    var items = document.querySelectorAll('media-item.thumbnail');
-    if (!items.length) return false;
-    createFloater();
-    items.forEach(bindItem);
-    return true;
+function initIndex() {
+  var items = document.querySelectorAll('media-item.thumbnail');
+  if (!items.length) return false;
+  createFloater();
+  items.forEach(bindItem);
+
+  var grid = document.querySelector('gallery-grid');
+  if (grid) {
+    grid.addEventListener('mouseleave', function () {
+      floater.style.opacity = '0';
+      document.querySelectorAll('media-item.thumbnail.is-hovered').forEach(function (el) {
+        el.classList.remove('is-hovered');
+      });
+    });
   }
+
+  return true;
+}
 
   var observer = new MutationObserver(function () {
     if (initIndex()) observer.disconnect();
