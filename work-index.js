@@ -1,5 +1,5 @@
 (function () {
-  var floater, floaterImg, moveListener = null;
+  var floater, floaterImg, active = false;
 
   function createFloater() {
     if (document.getElementById('work-index-floater')) {
@@ -18,16 +18,14 @@
 
   function hide() {
     if (!floater) return;
+    active = false;
     floater.style.opacity = '0';
     document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
       el.classList.remove('is-hovered');
     });
   }
 
-  function isOverGrid(e) {
-    var el = document.elementFromPoint(e.clientX, e.clientY);
-    if (!el) return false;
-    // Walk up the DOM to see if we're inside a gallery-grid
+  function isInsideGrid(el) {
     while (el) {
       if (el.tagName && el.tagName.toLowerCase() === 'gallery-grid') return true;
       el = el.parentElement;
@@ -62,6 +60,7 @@
       floater.style.top = (rect.top + rect.height / 2) + 'px';
       floater.style.transform = 'translate(-50%, -50%)';
       floater.style.opacity = '1';
+      active = true;
       item.classList.add('is-hovered');
     });
   }
@@ -78,19 +77,17 @@
 
     items.forEach(function (item) { bindItem(item, grid); });
 
-    // Remove old listener if exists
-    if (moveListener) {
-      document.removeEventListener('mousemove', moveListener);
-    }
-
-    moveListener = function (e) {
-      if (!isOverGrid(e)) hide();
-    };
-
-    document.addEventListener('mousemove', moveListener);
-
     return true;
   }
+
+  // Single document-level mouseover — fires reliably even through shadow DOM
+  document.addEventListener('mouseover', function (e) {
+    if (!active) return;
+    if (!isInsideGrid(e.target)) hide();
+  });
+
+  // Also hide on navigation
+  document.addEventListener('cargo:page:load', hide);
 
   var observer = new MutationObserver(function () {
     if (initIndex()) observer.disconnect();
