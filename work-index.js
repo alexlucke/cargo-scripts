@@ -1,3 +1,4 @@
+// v2
 (function () {
   var floater, floaterImg;
   function createFloater() {
@@ -38,7 +39,6 @@
     if (item._hoverBound) return;
     item._hoverBound = true;
     var caption = item.querySelector('figcaption.caption');
-    // Show on mouseenter of item (large area, fine for triggering show)
     item.addEventListener('mouseenter', function () {
       var src = getSrc(item);
       if (!src) return;
@@ -51,10 +51,8 @@
       floater.style.opacity = '1';
       item.classList.add('is-hovered');
     });
-    // Hide on mouseleave of caption (small 24px area, fires reliably)
     if (caption) {
       caption.addEventListener('mouseleave', function (e) {
-        // Only hide if we're not entering another caption
         var related = e.relatedTarget;
         while (related) {
           if (related.classList && related.classList.contains('caption')) return;
