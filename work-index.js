@@ -9,7 +9,7 @@
     }
     floater = document.createElement('div');
     floater.id = 'work-index-floater';
-    floater.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.25s ease;width:200px;max-width:20vw;';
+    floater.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.25s ease;width:260px;max-width:26vw;';
     floaterImg = document.createElement('img');
     floaterImg.style.cssText = 'display:block;width:100%;height:auto;';
     floater.appendChild(floaterImg);
@@ -45,18 +45,22 @@
     var caption = item.querySelector('figcaption.caption');
 
     // Show on mouseenter of item (large area, fine for triggering show)
-    item.addEventListener('mouseenter', function () {
-      var src = getSrc(item);
-      if (!src) return;
-      floaterImg.src = src;
-      var grid = document.querySelector('gallery-grid');
-      var rect = grid.getBoundingClientRect();
-      floater.style.left = (rect.left + rect.width / 2) + 'px';
-      floater.style.top = (window.innerHeight / 2) + 'px';
-      floater.style.transform = 'translate(-50%, -50%)';
-      floater.style.opacity = '1';
-      item.classList.add('is-hovered');
-    });
+item.addEventListener('mouseenter', function () {
+  var src = getSrc(item);
+  if (!src) return;
+  floaterImg.src = src;
+  var grid = document.querySelector('gallery-grid');
+  var captions = grid.querySelectorAll('figcaption.caption');
+  var first = captions[0].getBoundingClientRect();
+  var last = captions[captions.length - 1].getBoundingClientRect();
+  var listCenterY = (first.top + last.bottom) / 2;
+  var rect = grid.getBoundingClientRect();
+  floater.style.left = (rect.left + rect.width / 2) + 'px';
+  floater.style.top = listCenterY + 'px';
+  floater.style.transform = 'translate(-50%, -50%)';
+  floater.style.opacity = '1';
+  item.classList.add('is-hovered');
+});
 
     // Hide on mouseleave of caption (small 24px area, fires reliably)
     if (caption) {
