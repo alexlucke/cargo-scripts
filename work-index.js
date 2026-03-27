@@ -1,4 +1,4 @@
-// v2
+// v3
 (function () {
   var floater, floaterImg;
   function createFloater() {
@@ -45,9 +45,9 @@
       floaterImg.src = src;
       var grid = document.querySelector('gallery-grid');
       var rect = grid.getBoundingClientRect();
-      floater.style.left = (rect.left + rect.width / 2) + 'px';
-      floater.style.top = (window.innerHeight / 2) + 'px';
-      floater.style.transform = 'translate(-50%, -50%)';
+     floater.style.left = (rect.left + rect.width / 2) + 'px';
+floater.style.top = (rect.top + rect.height / 2) + 'px';  // ← center of the grid
+floater.style.transform = 'translate(-50%, -50%)';
       floater.style.opacity = '1';
       item.classList.add('is-hovered');
     });
