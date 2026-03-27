@@ -30,79 +30,74 @@
     return null;
   }
 
-  function tick() {
-    if (!floater) { requestAnimationFrame(tick); return; }
-
-    var hovered = document.querySelector('gallery-grid figcaption.caption:hover');
-
-    if (hovered) {
-      var item = hovered.parentElement;
-      while (item && item.tagName.toLowerCase() !== 'media-item') {
-        item = item.parentElement;
-      }
-      if (item) {
-        var src = getSrc(item);
-        if (src) {
-          if (floaterImg.getAttribute('data-src') !== src) {
-            floaterImg.src = src;
-            floaterImg.setAttribute('data-src', src);
-          }
-          var grid = document.querySelector('gallery-grid');
-          var rect = grid.getBoundingClientRect();
-          floater.style.left = (rect.left + rect.width / 2) + 'px';
-          floater.style.top = (window.innerHeight / 2) + 'px';
-          floater.style.transform = 'translate(-50%, -50%)';
-          floater.style.opacity = '1';
-          item.classList.add('is-hovered');
-        }
-      }
-    } else {
-      floater.style.opacity = '0';
-      document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
-        el.classList.remove('is-hovered');
-      });
-    }
-
-    requestAnimationFrame(tick);
+  function hide() {
+    if (!floater) return;
+    floater.style.opacity = '0';
+    document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
+      el.classList.remove('is-hovered');
+    });
   }
 
   function initIndex() {
     var grid = document.querySelector('gallery-grid');
     if (!grid) return false;
-
     var captions = grid.querySelectorAll('figcaption.caption');
     if (!captions.length) return false;
 
     createFloater();
+    hide();
 
-    // Handle clicks since pointer-events:none on media-item disables the link
-    captions.forEach(function (caption) {
-      if (caption._clickBound) return;
-      caption._clickBound = true;
-      caption.addEventListener('click', function () {
-        var item = caption.parentElement;
+    if (initialized) return true;
+    initialized = true;
+
+    document.addEventListener('mousemove', function (e) {
+      var grid = document.querySelector('gallery-grid');
+      if (!grid) { hide(); return; }
+
+      var captions = grid.querySelectorAll('figcaption.caption');
+      var matched = null;
+
+      captions.forEach(function (caption) {
+        var rect = caption.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          matched = caption;
+        }
+      });
+
+      if (matched) {
+        var item = matched.parentElement;
         while (item && item.tagName.toLowerCase() !== 'media-item') {
           item = item.parentElement;
         }
-        if (item) {
-          var href = item.getAttribute('href');
-          if (href) {
-            var rel = item.getAttribute('rel');
-            if (rel === 'history') {
-              history.pushState(null, '', href);
-              window.dispatchEvent(new PopStateEvent('popstate'));
-            } else {
-              window.location.href = href;
-            }
-          }
-        }
-      });
-    });
+        if (!item) return;
 
-    if (!initialized) {
-      initialized = true;
-      requestAnimationFrame(tick);
-    }
+        var src = getSrc(item);
+        if (!src) return;
+
+        if (floaterImg.getAttribute('data-src') !== src) {
+          floaterImg.src = src;
+          floaterImg.setAttribute('data-src', src);
+        }
+
+        var rect = grid.getBoundingClientRect();
+        floater.style.left = (rect.left + rect.width / 2) + 'px';
+        floater.style.top = (window.innerHeight / 2) + 'px';
+        floater.style.transform = 'translate(-50%, -50%)';
+        floater.style.opacity = '1';
+
+        document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
+          el.classList.remove('is-hovered');
+        });
+        item.classList.add('is-hovered');
+      } else {
+        hide();
+      }
+    });
 
     return true;
   }
@@ -112,6 +107,8 @@
   });
 
   function start() {
+    initialized = false;
+    hide();
     if (!initIndex()) {
       observer.observe(document.body, { childList: true, subtree: true });
     }
