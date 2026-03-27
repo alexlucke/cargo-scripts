@@ -38,42 +38,39 @@
     });
   }
 
-  function getListCenterY(grid) {
-    var captions = grid.querySelectorAll('figcaption.caption');
-    if (!captions.length) return window.innerHeight / 2;
-    var first = captions[0].getBoundingClientRect();
-    var last = captions[captions.length - 1].getBoundingClientRect();
-    return (first.top + last.bottom) / 2;
-  }
-
   function bindItem(item) {
     if (item._hoverBound) return;
     item._hoverBound = true;
 
     var caption = item.querySelector('figcaption.caption');
-    if (!caption) return;
 
-    caption.addEventListener('mouseenter', function () {
+    item.addEventListener('mouseenter', function () {
       var src = getSrc(item);
       if (!src) return;
       floaterImg.src = src;
       var grid = document.querySelector('gallery-grid');
       var rect = grid.getBoundingClientRect();
+      var captions = grid.querySelectorAll('figcaption.caption');
+      var first = captions[0].getBoundingClientRect();
+      var last = captions[captions.length - 1].getBoundingClientRect();
+      var listCenterY = (first.top + last.bottom) / 2;
       floater.style.left = (rect.left + rect.width / 2) + 'px';
-      floater.style.top = getListCenterY(grid) + 'px';
+      floater.style.top = listCenterY + 'px';
       floater.style.transform = 'translate(-50%, -50%)';
       floater.style.opacity = '1';
       item.classList.add('is-hovered');
     });
 
-    caption.addEventListener('mouseleave', function (e) {
-      var related = e.relatedTarget;
-      while (related) {
-        if (related.classList && related.classList.contains('caption')) return;
-        related = related.parentElement;
-      }
-      hide();
-    });
+    if (caption) {
+      caption.addEventListener('mouseleave', function (e) {
+        var related = e.relatedTarget;
+        while (related) {
+          if (related.classList && related.classList.contains('caption')) return;
+          related = related.parentElement;
+        }
+        hide();
+      });
+    }
   }
 
   function initIndex() {
