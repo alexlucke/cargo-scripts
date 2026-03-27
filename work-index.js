@@ -33,7 +33,6 @@
   function tick() {
     if (!floater) { requestAnimationFrame(tick); return; }
 
-    // Ask the browser which figcaption is currently hovered
     var hovered = document.querySelector('gallery-grid figcaption.caption:hover');
 
     if (hovered) {
@@ -44,7 +43,10 @@
       if (item) {
         var src = getSrc(item);
         if (src) {
-          if (floaterImg.src !== src) floaterImg.src = src;
+          if (floaterImg.getAttribute('data-src') !== src) {
+            floaterImg.src = src;
+            floaterImg.setAttribute('data-src', src);
+          }
           var grid = document.querySelector('gallery-grid');
           var rect = grid.getBoundingClientRect();
           floater.style.left = (rect.left + rect.width / 2) + 'px';
@@ -67,10 +69,41 @@
   function initIndex() {
     var grid = document.querySelector('gallery-grid');
     if (!grid) return false;
+
     var captions = grid.querySelectorAll('figcaption.caption');
     if (!captions.length) return false;
+
     createFloater();
-    if (!initialized) { initialized = true; requestAnimationFrame(tick); }
+
+    // Handle clicks since pointer-events:none on media-item disables the link
+    captions.forEach(function (caption) {
+      if (caption._clickBound) return;
+      caption._clickBound = true;
+      caption.addEventListener('click', function () {
+        var item = caption.parentElement;
+        while (item && item.tagName.toLowerCase() !== 'media-item') {
+          item = item.parentElement;
+        }
+        if (item) {
+          var href = item.getAttribute('href');
+          if (href) {
+            var rel = item.getAttribute('rel');
+            if (rel === 'history') {
+              history.pushState(null, '', href);
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            } else {
+              window.location.href = href;
+            }
+          }
+        }
+      });
+    });
+
+    if (!initialized) {
+      initialized = true;
+      requestAnimationFrame(tick);
+    }
+
     return true;
   }
 
