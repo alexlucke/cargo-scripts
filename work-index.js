@@ -30,6 +30,13 @@
     return null;
   }
 
+  function hideFloater(grid) {
+    floater.style.opacity = '0';
+    grid.querySelectorAll('media-item.is-hovered').forEach(function (el) {
+      el.classList.remove('is-hovered');
+    });
+  }
+
   function bindItem(item) {
     if (item._hoverBound) return;
     item._hoverBound = true;
@@ -40,40 +47,49 @@
       floaterImg.src = src;
       var grid = document.querySelector('gallery-grid');
       var rect = grid.getBoundingClientRect();
-      var centerX = rect.left + rect.width / 2;
-      var centerY = rect.top + rect.height / 2;
-      floater.style.left = centerX + 'px';
-      floater.style.top = centerY + 'px';
+      floater.style.left = (rect.left + rect.width / 2) + 'px';
+      floater.style.top = (rect.top + rect.height / 2) + 'px';
       floater.style.transform = 'translate(-50%, -50%)';
       floater.style.opacity = '1';
       item.classList.add('is-hovered');
     });
 
     item.addEventListener('mouseleave', function () {
-      floater.style.opacity = '0';
-      item.classList.remove('is-hovered');
+      var grid = document.querySelector('gallery-grid');
+      hideFloater(grid);
     });
   }
 
-function initIndex() {
-  var grid = document.querySelector('gallery-grid');
-  if (!grid) return false;
+  function initIndex() {
+    var grid = document.querySelector('gallery-grid');
+    if (!grid) return false;
 
-  var items = grid.querySelectorAll('media-item.thumbnail');
-  if (!items.length) return false;
+    var items = grid.querySelectorAll('media-item.thumbnail');
+    if (!items.length) return false;
 
-  createFloater();
-  items.forEach(bindItem);
+    createFloater();
 
-  grid.addEventListener('mouseleave', function () {
-    floater.style.opacity = '0';
-    grid.querySelectorAll('media-item.thumbnail.is-hovered').forEach(function (el) {
+    // Strip any is-hovered Cargo may have serialized into the DOM
+    grid.querySelectorAll('media-item.is-hovered').forEach(function (el) {
       el.classList.remove('is-hovered');
     });
-  });
 
-  return true;
-}
+    items.forEach(bindItem);
+
+    // Fallback: mousemove on document to catch shadow DOM swallowing mouseleave
+    document.addEventListener('mousemove', function (e) {
+      var rect = grid.getBoundingClientRect();
+      var inside = (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      );
+      if (!inside) hideFloater(grid);
+    });
+
+    return true;
+  }
 
   var observer = new MutationObserver(function () {
     if (initIndex()) observer.disconnect();
