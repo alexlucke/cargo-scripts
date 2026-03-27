@@ -1,5 +1,5 @@
 (function () {
-  var floater, floaterImg, mouseMoveAdded = false;
+  var floater, floaterImg, moveListener = null;
 
   function createFloater() {
     if (document.getElementById('work-index-floater')) {
@@ -22,6 +22,17 @@
     document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
       el.classList.remove('is-hovered');
     });
+  }
+
+  function isOverGrid(e) {
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el) return false;
+    // Walk up the DOM to see if we're inside a gallery-grid
+    while (el) {
+      if (el.tagName && el.tagName.toLowerCase() === 'gallery-grid') return true;
+      el = el.parentElement;
+    }
+    return false;
   }
 
   function getSrc(item) {
@@ -53,10 +64,6 @@
       floater.style.opacity = '1';
       item.classList.add('is-hovered');
     });
-
-    item.addEventListener('mouseleave', function () {
-      hide();
-    });
   }
 
   function initIndex() {
@@ -67,33 +74,20 @@
     if (!items.length) return false;
 
     createFloater();
-
-    // Strip serialized is-hovered state
-    grid.querySelectorAll('media-item.is-hovered').forEach(function (el) {
-      el.classList.remove('is-hovered');
-    });
+    hide();
 
     items.forEach(function (item) { bindItem(item, grid); });
 
-    // Only add mousemove once ever
-    if (!mouseMoveAdded) {
-      mouseMoveAdded = true;
-      document.addEventListener('mousemove', function (e) {
-        var currentGrid = document.querySelector('gallery-grid');
-        if (!currentGrid) { hide(); return; }
-        var rect = currentGrid.getBoundingClientRect();
-        var inside = (
-          e.clientX >= rect.left &&
-          e.clientX <= rect.right &&
-          e.clientY >= rect.top &&
-          e.clientY <= rect.bottom
-        );
-        if (!inside) hide();
-      });
+    // Remove old listener if exists
+    if (moveListener) {
+      document.removeEventListener('mousemove', moveListener);
     }
 
-    // Hide on page navigation
-    document.addEventListener('cargo:page:load', hide);
+    moveListener = function (e) {
+      if (!isOverGrid(e)) hide();
+    };
+
+    document.addEventListener('mousemove', moveListener);
 
     return true;
   }
@@ -103,7 +97,7 @@
   });
 
   function start() {
-    hide(); // Always hide on navigation
+    hide();
     if (!initIndex()) {
       observer.observe(document.body, { childList: true, subtree: true });
     }
