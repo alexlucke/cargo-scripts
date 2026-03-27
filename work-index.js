@@ -1,5 +1,5 @@
 (function () {
-  var floater, floaterImg;
+  var floater, floaterImg, mouseMoveAdded = false;
 
   function createFloater() {
     if (document.getElementById('work-index-floater')) {
@@ -16,6 +16,14 @@
     document.body.appendChild(floater);
   }
 
+  function hide() {
+    if (!floater) return;
+    floater.style.opacity = '0';
+    document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
+      el.classList.remove('is-hovered');
+    });
+  }
+
   function getSrc(item) {
     if (item._cachedSrc) return item._cachedSrc;
     if (!item.shadowRoot) return null;
@@ -30,14 +38,7 @@
     return null;
   }
 
-  function hideFloater(grid) {
-    floater.style.opacity = '0';
-    grid.querySelectorAll('media-item.is-hovered').forEach(function (el) {
-      el.classList.remove('is-hovered');
-    });
-  }
-
-  function bindItem(item) {
+  function bindItem(item, grid) {
     if (item._hoverBound) return;
     item._hoverBound = true;
 
@@ -45,7 +46,6 @@
       var src = getSrc(item);
       if (!src) return;
       floaterImg.src = src;
-      var grid = document.querySelector('gallery-grid');
       var rect = grid.getBoundingClientRect();
       floater.style.left = (rect.left + rect.width / 2) + 'px';
       floater.style.top = (rect.top + rect.height / 2) + 'px';
@@ -55,8 +55,7 @@
     });
 
     item.addEventListener('mouseleave', function () {
-      var grid = document.querySelector('gallery-grid');
-      hideFloater(grid);
+      hide();
     });
   }
 
@@ -69,24 +68,32 @@
 
     createFloater();
 
-    // Strip any is-hovered Cargo may have serialized into the DOM
+    // Strip serialized is-hovered state
     grid.querySelectorAll('media-item.is-hovered').forEach(function (el) {
       el.classList.remove('is-hovered');
     });
 
-    items.forEach(bindItem);
+    items.forEach(function (item) { bindItem(item, grid); });
 
-    // Fallback: mousemove on document to catch shadow DOM swallowing mouseleave
-    document.addEventListener('mousemove', function (e) {
-      var rect = grid.getBoundingClientRect();
-      var inside = (
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom
-      );
-      if (!inside) hideFloater(grid);
-    });
+    // Only add mousemove once ever
+    if (!mouseMoveAdded) {
+      mouseMoveAdded = true;
+      document.addEventListener('mousemove', function (e) {
+        var currentGrid = document.querySelector('gallery-grid');
+        if (!currentGrid) { hide(); return; }
+        var rect = currentGrid.getBoundingClientRect();
+        var inside = (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        );
+        if (!inside) hide();
+      });
+    }
+
+    // Hide on page navigation
+    document.addEventListener('cargo:page:load', hide);
 
     return true;
   }
@@ -96,6 +103,7 @@
   });
 
   function start() {
+    hide(); // Always hide on navigation
     if (!initIndex()) {
       observer.observe(document.body, { childList: true, subtree: true });
     }
