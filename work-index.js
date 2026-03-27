@@ -1,5 +1,5 @@
 (function () {
-  var floater, floaterImg, active = false;
+  var floater, floaterImg;
 
   function createFloater() {
     if (document.getElementById('work-index-floater')) {
@@ -18,19 +18,10 @@
 
   function hide() {
     if (!floater) return;
-    active = false;
     floater.style.opacity = '0';
     document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
       el.classList.remove('is-hovered');
     });
-  }
-
-  function isInsideGrid(el) {
-    while (el) {
-      if (el.tagName && el.tagName.toLowerCase() === 'gallery-grid') return true;
-      el = el.parentElement;
-    }
-    return false;
   }
 
   function getSrc(item) {
@@ -47,47 +38,42 @@
     return null;
   }
 
-  function bindItem(item, grid) {
-    if (item._hoverBound) return;
-    item._hoverBound = true;
-
-    item.addEventListener('mouseenter', function () {
-      var src = getSrc(item);
-      if (!src) return;
-      floaterImg.src = src;
-      var rect = grid.getBoundingClientRect();
-      floater.style.left = (rect.left + rect.width / 2) + 'px';
-      floater.style.top = (rect.top + rect.height / 2) + 'px';
-      floater.style.transform = 'translate(-50%, -50%)';
-      floater.style.opacity = '1';
-      active = true;
-      item.classList.add('is-hovered');
-    });
-  }
-
   function initIndex() {
     var grid = document.querySelector('gallery-grid');
     if (!grid) return false;
 
-    var items = grid.querySelectorAll('media-item.thumbnail');
-    if (!items.length) return false;
+    var captions = grid.querySelectorAll('figcaption.caption');
+    if (!captions.length) return false;
 
     createFloater();
     hide();
 
-    items.forEach(function (item) { bindItem(item, grid); });
+    captions.forEach(function (caption) {
+      if (caption._hoverBound) return;
+      caption._hoverBound = true;
 
+      var item = caption.closest('media-item') || caption.parentElement;
+
+      caption.addEventListener('mouseenter', function () {
+        var src = getSrc(item);
+        if (!src) return;
+        floaterImg.src = src;
+        var rect = grid.getBoundingClientRect();
+        floater.style.left = (rect.left + rect.width / 2) + 'px';
+        floater.style.top = (window.innerHeight / 2) + 'px';
+        floater.style.transform = 'translate(-50%, -50%)';
+        floater.style.opacity = '1';
+        item.classList.add('is-hovered');
+      });
+
+      caption.addEventListener('mouseleave', function () {
+        hide();
+      });
+    });
+
+    document.addEventListener('cargo:page:load', hide);
     return true;
   }
-
-  // Single document-level mouseover — fires reliably even through shadow DOM
-  document.addEventListener('mouseover', function (e) {
-    if (!active) return;
-    if (!isInsideGrid(e.target)) hide();
-  });
-
-  // Also hide on navigation
-  document.addEventListener('cargo:page:load', hide);
 
   var observer = new MutationObserver(function () {
     if (initIndex()) observer.disconnect();
