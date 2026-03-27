@@ -1,5 +1,5 @@
 (function () {
-  var floater, floaterImg;
+  var floater, floaterImg, initialized = false;
 
   function createFloater() {
     if (document.getElementById('work-index-floater')) {
@@ -9,19 +9,11 @@
     }
     floater = document.createElement('div');
     floater.id = 'work-index-floater';
-    floater.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.25s ease;width:200px;max-width:20vw;';
+    floater.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;opacity:0;transition:opacity 0.2s ease;width:200px;max-width:20vw;';
     floaterImg = document.createElement('img');
     floaterImg.style.cssText = 'display:block;width:100%;height:auto;';
     floater.appendChild(floaterImg);
     document.body.appendChild(floater);
-  }
-
-  function hide() {
-    if (!floater) return;
-    floater.style.opacity = '0';
-    document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
-      el.classList.remove('is-hovered');
-    });
   }
 
   function getSrc(item) {
@@ -38,40 +30,47 @@
     return null;
   }
 
+  function tick() {
+    if (!floater) { requestAnimationFrame(tick); return; }
+
+    // Ask the browser which figcaption is currently hovered
+    var hovered = document.querySelector('gallery-grid figcaption.caption:hover');
+
+    if (hovered) {
+      var item = hovered.parentElement;
+      while (item && item.tagName.toLowerCase() !== 'media-item') {
+        item = item.parentElement;
+      }
+      if (item) {
+        var src = getSrc(item);
+        if (src) {
+          if (floaterImg.src !== src) floaterImg.src = src;
+          var grid = document.querySelector('gallery-grid');
+          var rect = grid.getBoundingClientRect();
+          floater.style.left = (rect.left + rect.width / 2) + 'px';
+          floater.style.top = (window.innerHeight / 2) + 'px';
+          floater.style.transform = 'translate(-50%, -50%)';
+          floater.style.opacity = '1';
+          item.classList.add('is-hovered');
+        }
+      }
+    } else {
+      floater.style.opacity = '0';
+      document.querySelectorAll('media-item.is-hovered').forEach(function (el) {
+        el.classList.remove('is-hovered');
+      });
+    }
+
+    requestAnimationFrame(tick);
+  }
+
   function initIndex() {
     var grid = document.querySelector('gallery-grid');
     if (!grid) return false;
-
     var captions = grid.querySelectorAll('figcaption.caption');
     if (!captions.length) return false;
-
     createFloater();
-    hide();
-
-    captions.forEach(function (caption) {
-      if (caption._hoverBound) return;
-      caption._hoverBound = true;
-
-      var item = caption.closest('media-item') || caption.parentElement;
-
-      caption.addEventListener('mouseenter', function () {
-        var src = getSrc(item);
-        if (!src) return;
-        floaterImg.src = src;
-        var rect = grid.getBoundingClientRect();
-        floater.style.left = (rect.left + rect.width / 2) + 'px';
-        floater.style.top = (window.innerHeight / 2) + 'px';
-        floater.style.transform = 'translate(-50%, -50%)';
-        floater.style.opacity = '1';
-        item.classList.add('is-hovered');
-      });
-
-      caption.addEventListener('mouseleave', function () {
-        hide();
-      });
-    });
-
-    document.addEventListener('cargo:page:load', hide);
+    if (!initialized) { initialized = true; requestAnimationFrame(tick); }
     return true;
   }
 
@@ -80,7 +79,6 @@
   });
 
   function start() {
-    hide();
     if (!initIndex()) {
       observer.observe(document.body, { childList: true, subtree: true });
     }
