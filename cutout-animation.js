@@ -27,7 +27,9 @@
     if (!img || !wrap) return;
 
     var svgNS = 'http://www.w3.org/2000/svg';
-    var svg   = document.createElementNS(svgNS, 'svg');
+
+    /* ── Create and append SVG mask to body ── */
+    var svg  = document.createElementNS(svgNS, 'svg');
     svg.setAttribute('style', 'position:absolute;width:0;height:0;overflow:hidden;');
     svg.setAttribute('aria-hidden', 'true');
 
@@ -39,6 +41,7 @@
     svg.appendChild(defs);
     document.body.appendChild(svg);
 
+    /* Force image to 280px so offsetWidth is reliable */
     img.setAttribute('style',
       'display:block;width:280px;max-width:none !important;height:auto;'
     );
@@ -47,6 +50,7 @@
     var H = img.offsetHeight;
     if (!W || !H) return;
 
+    /* ── Build mask geometry ── */
     mask.setAttribute('x', 0);
     mask.setAttribute('y', 0);
     mask.setAttribute('width',  W);
@@ -58,15 +62,6 @@
     bg.setAttribute('fill', 'white');
     mask.appendChild(bg);
 
-    img.setAttribute('style',
-      'display:block;' +
-      'width:280px;' +
-      'max-width:none !important;' +
-      'height:auto;' +
-      'mask:url(#co-mask) !important;' +
-      '-webkit-mask:url(#co-mask) !important;'
-    );
-
     circles.forEach(function (d) {
       var r    = d.r  * W;
       var cx   = d.cx * W;
@@ -75,6 +70,7 @@
       var top  = cy - r;
       var dia  = r * 2;
 
+      /* Hole in mask */
       var hole = document.createElementNS(svgNS, 'circle');
       hole.setAttribute('cx', cx);
       hole.setAttribute('cy', cy);
@@ -82,6 +78,7 @@
       hole.setAttribute('fill', 'black');
       mask.appendChild(hole);
 
+      /* Circle piece */
       var el = document.createElement('div');
       el.setAttribute('style', [
         'position:absolute',
@@ -104,6 +101,21 @@
       wrap.appendChild(el);
       el.style.transform = 'translate(' + d.sx + 'px,' + d.sy + 'px)';
       circleEls.push(el);
+    });
+
+    /*
+      Wait one frame for the browser to register the SVG
+      before applying mask — fixes Cargo published mode
+    */
+    requestAnimationFrame(function () {
+      img.setAttribute('style',
+        'display:block;' +
+        'width:280px;' +
+        'max-width:none !important;' +
+        'height:auto;' +
+        'mask:url(#co-mask) !important;' +
+        '-webkit-mask:url(#co-mask) !important;'
+      );
     });
   }
 
