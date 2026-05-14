@@ -62,14 +62,17 @@ floater.style.transform = 'translate(-50%, -50%)';
       });
     }
   }
-  function initIndex() {
-    var items = document.querySelectorAll('media-item.thumbnail');
-    if (!items.length) return false;
-    createFloater();
-    hide();
-    items.forEach(bindItem);
-    return true;
-  }
+function initIndex() {
+  var grid = document.querySelector('gallery-grid');
+  if (!grid) return false; // ← not on the index, bail out
+  
+  var items = document.querySelectorAll('media-item.thumbnail');
+  if (!items.length) return false;
+  createFloater();
+  hide();
+  items.forEach(bindItem);
+  return true;
+}
   var observer = new MutationObserver(function () {
     if (initIndex()) observer.disconnect();
   });
