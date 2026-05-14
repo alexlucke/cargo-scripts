@@ -108,6 +108,13 @@
     }
   }
 
+  // Intercept Cargo's client-side navigation
+var _pushState = history.pushState;
+history.pushState = function() {
+  _pushState.apply(history, arguments);
+  startFresh();
+};
+
   document.addEventListener('DOMContentLoaded', startInit);
   window.addEventListener('load', startInit);
   document.addEventListener('cargo:page:load', startFresh);
