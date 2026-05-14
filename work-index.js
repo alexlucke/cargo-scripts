@@ -1,6 +1,7 @@
 // v3
 (function () {
   var floater, floaterImg;
+
   function createFloater() {
     if (document.getElementById('work-index-floater')) {
       floater = document.getElementById('work-index-floater');
@@ -15,6 +16,7 @@
     floater.appendChild(floaterImg);
     document.body.appendChild(floater);
   }
+
   function getSrc(item) {
     if (item._cachedSrc) return item._cachedSrc;
     if (!item.shadowRoot) return null;
@@ -28,6 +30,7 @@
     }
     return null;
   }
+
   function hide() {
     if (!floater) return;
     floater.style.opacity = '0';
@@ -35,22 +38,26 @@
       el.classList.remove('is-hovered');
     });
   }
+
   function bindItem(item) {
     if (item._hoverBound) return;
     item._hoverBound = true;
+
     var caption = item.querySelector('figcaption.caption');
+
     item.addEventListener('mouseenter', function () {
       var src = getSrc(item);
       if (!src) return;
       floaterImg.src = src;
       var grid = document.querySelector('gallery-grid');
       var rect = grid.getBoundingClientRect();
-     floater.style.left = (rect.left + rect.width / 2) + 'px';
-floater.style.top = (rect.top + rect.height / 2) + 'px';  // ← center of the grid
-floater.style.transform = 'translate(-50%, -50%)';
+      floater.style.left = (rect.left + rect.width / 2) + 'px';
+      floater.style.top = (rect.top + rect.height / 2) + 'px';
+      floater.style.transform = 'translate(-50%, -50%)';
       floater.style.opacity = '1';
       item.classList.add('is-hovered');
     });
+
     if (caption) {
       caption.addEventListener('mouseleave', function (e) {
         var related = e.relatedTarget;
@@ -62,49 +69,46 @@ floater.style.transform = 'translate(-50%, -50%)';
       });
     }
   }
-function initIndex() {
-  var grid = document.querySelector('gallery-grid');
-  if (!grid) return false; // ← not on the index, bail out
-  
-  var items = document.querySelectorAll('media-item.thumbnail');
-  if (!items.length) return false;
-  createFloater();
-  hide();
-  items.forEach(bindItem);
-  return true;
-}
+
+  function isIndexPage() {
+    // Only activate on the page whose path is exactly / or /work
+    var path = window.location.pathname.replace(/\/$/, '') || '/';
+    return path === '' || path === '/' || path === '/work';
+  }
+
+  function initIndex() {
+    if (!isIndexPage()) return false;
+    var items = document.querySelectorAll('media-item.thumbnail');
+    if (!items.length) return false;
+    createFloater();
+    hide();
+    items.forEach(bindItem);
+    return true;
+  }
+
   var observer = new MutationObserver(function () {
     if (initIndex()) observer.disconnect();
   });
-function start() {
-  // Destroy floater on every page transition — recreated only if index exists
-  var existing = document.getElementById('work-index-floater');
-  if (existing) existing.remove();
-  floater = null;
-  floaterImg = null;
 
-  if (!initIndex()) {
-    observer.observe(document.body, { childList: true, subtree: true });
+  function startFresh() {
+    observer.disconnect();
+    var existing = document.getElementById('work-index-floater');
+    if (existing) existing.remove();
+    floater = null;
+    floaterImg = null;
+    if (!initIndex()) {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
   }
-}
-function startFresh() {
-  var existing = document.getElementById('work-index-floater');
-  if (existing) existing.remove();
-  floater = null;
-  floaterImg = null;
-  if (!initIndex()) {
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-}
 
-function startInit() {
-  hide();
-  if (!initIndex()) {
-    observer.observe(document.body, { childList: true, subtree: true });
+  function startInit() {
+    hide();
+    if (!initIndex()) {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
   }
-}
 
-document.addEventListener('DOMContentLoaded', startInit);
-window.addEventListener('load', startInit);
-document.addEventListener('cargo:page:load', startFresh);
+  document.addEventListener('DOMContentLoaded', startInit);
+  window.addEventListener('load', startInit);
+  document.addEventListener('cargo:page:load', startFresh);
 })();
