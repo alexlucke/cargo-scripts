@@ -84,7 +84,24 @@ function start() {
     observer.observe(document.body, { childList: true, subtree: true });
   }
 }
-  document.addEventListener('DOMContentLoaded', start);
-  window.addEventListener('load', start);
-  document.addEventListener('cargo:page:load', start);
+function startFresh() {
+  var existing = document.getElementById('work-index-floater');
+  if (existing) existing.remove();
+  floater = null;
+  floaterImg = null;
+  if (!initIndex()) {
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+}
+
+function startInit() {
+  hide();
+  if (!initIndex()) {
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', startInit);
+window.addEventListener('load', startInit);
+document.addEventListener('cargo:page:load', startFresh);
 })();
