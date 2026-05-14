@@ -73,12 +73,17 @@ floater.style.transform = 'translate(-50%, -50%)';
   var observer = new MutationObserver(function () {
     if (initIndex()) observer.disconnect();
   });
-  function start() {
-    hide();
-    if (!initIndex()) {
-      observer.observe(document.body, { childList: true, subtree: true });
-    }
+function start() {
+  // Destroy floater on every page transition — recreated only if index exists
+  var existing = document.getElementById('work-index-floater');
+  if (existing) existing.remove();
+  floater = null;
+  floaterImg = null;
+
+  if (!initIndex()) {
+    observer.observe(document.body, { childList: true, subtree: true });
   }
+}
   document.addEventListener('DOMContentLoaded', start);
   window.addEventListener('load', start);
   document.addEventListener('cargo:page:load', start);
